@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "AWS Credential Helper",
+  "version": "1.0.0",
+  "author": "Arghaya Mondal",
+  "homepage_url": "https://github.com/ergdevops/aws-credential-helper",
+  "minimum_chrome_version": "116",
+  "description": "Reads the SAML assertion from the Okta→AWS sign-in POST (read-only, non-blocking) to call AWS STS for temporary credentials. No request is modified or cancelled.",
+  "permissions": ["webRequest", "storage", "offscreen"],
+  "optional_permissions": ["clipboardRead"],
+  "host_permissions": [
+    "https://signin.aws.amazon.com/*",
+    "https://sts.amazonaws.com/*",
+    "https://signin.amazonaws.cn/*",
+    "https://sts.cn-north-1.amazonaws.com.cn/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AWS Credential Helper",
+    "default_icon": {
+      "16": "icon-16.png",
+      "32": "icon-32.png",
+      "48": "icon-48.png",
+      "128": "icon.png"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none';"
+  },
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon.png"
+  }
+}

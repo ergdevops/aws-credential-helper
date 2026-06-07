@@ -1,0 +1,382 @@
+/* Palette: GitHub-dark-ish base, amber primary accent (AWS-adjacent without
+   copying console orange), mint for active/success, coral for danger. */
+:root {
+  --bg: #0d1117;
+  --bg-2: #161b22;
+  --bg-3: #1f2630;
+  --line: #30363d;
+  --fg: #c9d1d9;
+  --fg-dim: #8b949e;
+  --fg-mute: #6b7280;
+  --accent: #f5a524;
+  --accent-soft: rgba(245, 165, 36, 0.15);
+  --ok: #34d399;
+  --bad: #f87171;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  width: 440px;
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ─── status bar ─────────────────────────────────────────── */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.bar .brand {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.bar .sep { color: var(--fg-mute); }
+.bar .cell {
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.bar .grow { flex: 1; }
+.bar .indicator {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--fg-mute);
+}
+.bar.active .indicator { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.bar.expired .indicator { background: var(--bad); box-shadow: 0 0 6px var(--bad); }
+
+/* ─── main blocks ────────────────────────────────────────── */
+main {
+  padding: 10px;
+  padding-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#cards-container:empty { display: none; }
+.block {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.label {
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+/* ─── key-value rows for creds block ─────────────────────── */
+.kv {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  column-gap: 8px;
+  row-gap: 3px;
+  align-items: center;
+}
+.kv > * { line-height: 1.7; }
+.kv-default {
+  grid-column: 1 / -1;
+  color: var(--fg-mute);
+  margin-bottom: 2px;
+}
+.kv-spacer { /* placeholder so access-key row aligns with 5-col grid */ }
+.kv-k { color: var(--fg-dim); white-space: nowrap; }
+.kv-eq { color: var(--fg-mute); }
+.kv-v {
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-variant-ligatures: none;
+}
+.kv-v.secret.hidden { letter-spacing: 1px; }
+
+/* ─── pre code blocks ────────────────────────────────────── */
+.code {
+  margin: 0;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--fg);
+  white-space: pre;
+  overflow-x: auto;
+  max-height: 120px;
+}
+
+/* ─── icon buttons ───────────────────────────────────────── */
+.ic {
+  background: transparent;
+  color: var(--fg-dim);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  transition: background 0.1s, color 0.1s;
+}
+.ic:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.ic.copied { color: var(--ok); }
+
+/* ─── picker ─────────────────────────────────────────────── */
+#picker-block select {
+  width: 100%;
+  background: var(--bg-3);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 6px;
+  font-family: inherit;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.primary {
+  background: var(--accent);
+  color: #1a1100;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.primary:hover { background: #ffb83d; }
+.err { color: var(--bad); margin-top: 6px; font-size: 11px; }
+
+/* ─── empty state ────────────────────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 18px 10px;
+  border-style: dashed;
+}
+.empty-msg { color: var(--fg-dim); font-size: 11px; }
+.disclosure-bar {
+  padding: 5px 12px;
+  font-size: 10px;
+  color: var(--fg-mute);
+  background: var(--bg-2);
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.dim { color: var(--accent); }
+
+/* ─── footer ─────────────────────────────────────────────── */
+.footer {
+  padding: 8px 10px 12px;
+  text-align: center;
+  border-top: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.ghost {
+  background: transparent;
+  color: var(--fg-mute);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+}
+.ghost:hover { color: var(--bad); border-color: var(--bad); }
+
+/* ─── ko-fi text link (in settings panel) ───────────────── */
+.kofi-text-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 10px;
+}
+.kofi-text-link:hover { text-decoration: underline; }
+
+/* ─── clipboard permission banner ───────────────────────── */
+.clipboard-banner {
+  background: var(--bg-3);
+  border-bottom: 1px solid var(--line);
+  padding: 8px 12px;
+  font-size: 10px;
+  color: var(--fg-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.clipboard-banner-btns {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* ─── role cards ─────────────────────────────────────────── */
+#cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 10px 0;
+}
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.card-expired { border-color: var(--bad); }
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: var(--bg-3);
+  border-bottom: 1px solid var(--line);
+}
+.card-role {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-account { color: var(--fg-mute); font-size: 10px; white-space: nowrap; }
+.card-expires { color: var(--fg-dim); font-size: 10px; white-space: nowrap; }
+.expired-text { color: var(--bad); }
+.remove-btn { color: var(--fg-mute); font-size: 11px; margin-left: 2px; }
+.remove-btn:hover { color: var(--bad); background: transparent; }
+.card-section { padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.card-section:last-child { border-bottom: none; }
+
+/* ─── gear button in header ──────────────────────────────── */
+.gear-btn {
+  font-size: 13px;
+  padding: 2px 4px;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+.gear-btn:hover, .gear-btn.active { opacity: 1; color: var(--accent); }
+
+/* ─── settings panel ─────────────────────────────────────── */
+.settings-panel {
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.settings-row-end { margin-top: 2px; }
+.settings-label {
+  color: var(--fg-dim);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.settings-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.duration-input {
+  width: 52px;
+  background: var(--bg-3);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: 11px;
+  text-align: center;
+}
+.duration-input:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
+.settings-unit { color: var(--fg-mute); font-size: 11px; }
+.settings-control-wide { flex: 1; justify-content: flex-end; }
+.okta-input {
+  width: 100%;
+  background: var(--bg-3);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: 11px;
+}
+.okta-input:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
+.okta-input::placeholder { color: var(--fg-mute); }
+.settings-hint { color: var(--fg-mute); font-size: 10px; }
+.settings-hint-inline { color: var(--fg-mute); font-size: 10px; }
+.settings-save { padding: 5px 14px; font-size: 10px; }
+.settings-saved { color: var(--ok); font-size: 10px; text-align: right; }
+
+/* ─── toggle switch ──────────────────────────────────────── */
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  width: 30px;
+  height: 16px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  transition: background 0.2s, border-color 0.2s;
+  position: relative;
+}
+.toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 10px; height: 10px;
+  background: var(--fg-mute);
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+.toggle input:checked + .toggle-track {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.toggle input:checked + .toggle-track::after {
+  transform: translateX(14px);
+  background: var(--accent);
+}
+
+[hidden] { display: none !important; }

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AWS Credential Helper</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header class="bar" id="bar">
+    <span class="brand">ergdev</span>
+    <span class="sep">│</span>
+    <span class="cell" id="cell-account">—</span>
+    <span class="sep">│</span>
+    <span class="cell" id="cell-role">no session</span>
+    <span class="sep">│</span>
+    <span class="cell" id="cell-expires">—</span>
+    <span class="grow"></span>
+    <span class="indicator" id="indicator" title="status"></span>
+    <button class="ic gear-btn" id="settings-toggle" title="settings">⚙</button>
+  </header>
+
+  <section class="settings-panel" id="settings-panel" hidden>
+    <div class="settings-row">
+      <label class="settings-label" for="duration-input">session duration</label>
+      <div class="settings-control">
+        <input type="number" id="duration-input" class="duration-input" min="1" max="12" step="1" value="1" />
+        <span class="settings-unit">hours</span>
+      </div>
+    </div>
+    <div class="settings-row">
+      <label class="settings-label" for="china-toggle">aws china partition</label>
+      <div class="settings-control">
+        <label class="toggle">
+          <input type="checkbox" id="china-toggle" />
+          <span class="toggle-track"></span>
+        </label>
+        <span class="settings-hint-inline" id="china-hint">signin.amazonaws.cn</span>
+      </div>
+    </div>
+    <div class="settings-row">
+      <label class="settings-label" for="okta-input">custom okta domain</label>
+      <div class="settings-control settings-control-wide">
+        <input type="text" id="okta-input" class="okta-input" placeholder="e.g. mycompany.okta.com" spellcheck="false" />
+      </div>
+    </div>
+    <div class="settings-row settings-row-end">
+      <span class="settings-hint">applies on next sign-in</span>
+      <button id="settings-save" class="primary settings-save">save</button>
+    </div>
+    <div class="settings-saved" id="settings-saved" hidden>✓ saved</div>
+    <div class="settings-row">
+      <span class="settings-hint">
+        Support the developer:
+        <a href="https://topmate.io/ergdev/2144445" target="_blank" rel="noopener noreferrer" class="kofi-text-link" title="Optional tip — the extension is free and GPL-licensed regardless">Support this project ↗</a>
+      </span>
+    </div>
+  </section>
+
+  <!-- G2 — shown before requesting clipboardRead permission -->
+  <div class="clipboard-banner" id="clipboard-banner" hidden>
+    <span>Allow clipboard access to auto-clear copied credentials after 60s?</span>
+    <div class="clipboard-banner-btns">
+      <button id="clipboard-allow" class="primary settings-save">allow</button>
+      <button id="clipboard-deny" class="ghost">not now</button>
+    </div>
+  </div>
+
+  <main id="body">
+    <section class="block" id="picker-block" hidden>
+      <div class="block-head">
+        <span class="label">choose role</span>
+      </div>
+      <select id="role-select"></select>
+      <button id="role-go" class="primary">assume</button>
+      <div class="err" id="picker-err" hidden></div>
+    </section>
+
+    <div id="cards-container"></div>
+
+    <section class="block empty" id="empty-block">
+      <div class="empty-msg">
+        <span class="dim">waiting for SAML sign-in.</span><br/>
+        sign in to AWS via Okta to populate credentials.
+      </div>
+    </section>
+  </main>
+
+  <div class="disclosure-bar">
+    Reads your Okta→AWS SAML assertion (read-only) · sends credentials only to AWS STS
+  </div>
+
+  <footer class="footer" id="footer" hidden>
+    <button id="clear-btn" class="ghost">✕ clear all sessions</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
