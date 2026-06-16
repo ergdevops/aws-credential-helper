@@ -284,7 +284,10 @@ async function load() {
 
   const allAssumed = pending?.roles?.length > 0 &&
     pending.roles.every(r => credentialsMap[r.roleArn]);
-  if (pending?.roles?.length > 1 && !allAssumed) {
+  // Show the confirm/picker UI for any pending capture that needs confirmation
+  // (untrusted/no-initiator, incl. single role) or any multi-role capture.
+  const needsConfirm = pending?.needsConfirm || (pending?.roles?.length > 1);
+  if (pending?.roles?.length >= 1 && needsConfirm && !allAssumed) {
     renderPicker(pending, credentialsMap);
     $("picker-block").hidden = false;
     $("empty-block").hidden = true;

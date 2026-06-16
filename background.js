@@ -93,12 +93,14 @@ async function isAcceptableSamlPost(details) {
   if (details.type !== "main_frame") return false;
   if (!details.requestBody?.formData) return false;
   const trustedSuffixes = await getTrustedSuffixes();
-  if (isTrustedInitiator(details.initiator, trustedSuffixes)) return true;
-  // Many IdPs use no-referrer on the SAML auto-submit form, leaving initiator
-  // undefined. Allow these — STS cryptographically validates the assertion
-  // signature against the configured IdP, so a forged POST cannot mint creds.
-  if (!details.initiator) return true;
-  return false;
+  // Trusted initiator → safe to auto-assume a single role.
+  if (isTrustedInitiator(details.initiator, trustedSuffixes)) return { ok: true, trusted: true };
+  // Missing initiator is common (no-referrer auto-submit forms) but is NOT
+  // proof of user intent: a replayed/forged top-level POST looks identical.
+  // Accept the capture but require explicit confirmation before calling STS,
+  // so a silent assertion-replay cannot mint credentials.
+  if (!details.initiator) return { ok: true, trusted: false };
+  return { ok: false, trusted: false };
 }
 
 // ─── webRequest listener ──────────────────────────────────────
@@ -106,13 +108,14 @@ chrome.webRequest.onBeforeRequest.addListener(
   (details) => {
     (async () => {
       try {
-        if (!await isAcceptableSamlPost(details)) return;
+        const verdict = await isAcceptableSamlPost(details);
+        if (!verdict.ok) return;
         const samlField = details.requestBody.formData.SAMLResponse;
         if (!samlField || !samlField[0]) return;
         // reject oversized assertions before decoding (cap on b64 chars)
         if (samlField[0].length > SAML_MAX_B64_CHARS) return;
         const china = details.url.startsWith(SAML_ENDPOINT_CHINA);
-        handleSamlResponse(samlField[0], china).catch(() => {});
+        handleSamlResponse(samlField[0], china, verdict.trusted).catch(() => {});
       } catch (_) {}
     })();
   },
@@ -144,20 +147,27 @@ async function offscreenSend(payload) {
 }
 
 // ─── SAML → STS flow ─────────────────────────────────────────
-async function handleSamlResponse(samlB64, china = false) {
+async function handleSamlResponse(samlB64, china = false, trusted = false) {
   const samlXml = atobUtf8(samlB64);
   const resp = await offscreenSend({ type: "parseSaml", xml: samlXml });
   if (!resp?.ok) throw new Error(resp?.error || "saml parse failed");
   const roles = resp.roles;
   if (!roles || roles.length === 0) throw new Error("No AWS roles in SAML assertion");
 
-  if (roles.length === 1) {
+  // Only auto-assume when the capture came from a trusted initiator. An
+  // untrusted/no-initiator capture always requires explicit confirmation,
+  // even for a single role, so a silent replay cannot mint credentials.
+  if (roles.length === 1 && trusted) {
     await assumeAndStore(roles[0], samlB64, china);
     return;
   }
 
-  // Multi-role: encrypt and stash for popup to pick.
-  const encrypted = await encryptObject({ samlAssertion: samlB64, roles, china, createdAt: Date.now() });
+  // Stash for the popup to confirm/pick. needsConfirm is true when the capture
+  // was not from a trusted initiator (this also covers the single-role case).
+  const encrypted = await encryptObject({
+    samlAssertion: samlB64, roles, china,
+    needsConfirm: !trusted, createdAt: Date.now(),
+  });
   await chrome.storage.session.set({ pending: encrypted });
 }
 
@@ -232,8 +242,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ ok: true, credentialsMap: map, pending: null, sessionExpired });
         return;
       }
-      // strip raw SAML assertion — popup only needs roles list
-      const safePend = pend ? { roles: pend.roles, china: pend.china, createdAt: pend.createdAt } : null;
+      // strip raw SAML assertion — popup only needs roles list + confirm flag
+      const safePend = pend ? { roles: pend.roles, china: pend.china, needsConfirm: !!pend.needsConfirm, createdAt: pend.createdAt } : null;
       sendResponse({ ok: true, credentialsMap: map, pending: safePend, sessionExpired });
     })();
     return true;
